@@ -11,6 +11,7 @@ FROM job200 j
 INNER JOIN wo200 ON j.j_number = wo200.wo_job
 INNER	JOIN delreq_task_view dr ON wo200.wo_number = dr.dr_wonum
 INNER JOIN delnote dl ON dl.dn_number = dr.dr_dnnum
+WHERE YEAR(dl.dn_despatched) = YEAR(CURDATE())
 ORDER BY dl.dn_despatched;"""
 
 query = pd.read_sql_query(text(query_str), con=db_connection)   
