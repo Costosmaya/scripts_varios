@@ -26,8 +26,8 @@ inner join itm_cls_view item ON iss.item = item.itm_code
 INNER JOIN stkitm ON item.itm_code = stkitm.itm_code
 WHERE esttext.sect_num = 0
 AND item.itm_is_paper = 1
-AND YEAR(job200.j_booked_in) = YEAR(CURDATE())
-AND MONTH(job200.j_booked_in) = MONTH(CURDATE())
+AND YEAR(iss.when_issued) = YEAR(CURDATE())
+AND MONTH(iss.when_issued) = MONTH(CURDATE())
 GROUP BY  job200.j_number, job200.j_orig, e4e.ee_hdrnum, e4e.ee_estnum, item.itm_code;"""
 
 
@@ -154,7 +154,9 @@ with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
 
     (max_row, max_col) = dfCostoExtra.shape
 
-    column_settings = [{'header': column} for column in dfCostoExtra.columns]
+    wrap_format     = workbook.add_format({'text_wrap': 1})
+
+    column_settings = [{'header': column, 'header_format':wrap_format} for column in dfCostoExtra.columns]
 
 
     worksheet.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings})
