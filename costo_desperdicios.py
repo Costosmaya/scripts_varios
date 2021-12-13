@@ -91,7 +91,7 @@ for order in orders:
 
             subdf[["Ancho", "Alto"]] = subdf[["Ancho", "Alto"]].apply(lambda x: round(x/25.4))
 
-            subdf["Area Almacen"] = subdf["Ancho"] * subdf["Alto"]
+            subdf["Area Almacen"] = (subdf["Ancho"]-0.94) * (subdf["Alto"]-1.14)
 
             subdf["costo Unitario"] = subdf["iss_value"]/subdf["iss_quantity"]
 
