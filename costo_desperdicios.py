@@ -2,6 +2,8 @@
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
 from sqlalchemy import create_engine, text
+from pandas.api.types import CategoricalDtype
+from collections import OrderedDict
 from openpyxl import load_workbook
 import pandas as pd
 import numpy as np
@@ -26,8 +28,8 @@ inner join itm_cls_view item ON iss.item = item.itm_code
 INNER JOIN stkitm ON item.itm_code = stkitm.itm_code
 WHERE esttext.sect_num = 0
 AND item.itm_is_paper = 1
-AND YEAR(iss.when_issued) = YEAR(CURDATE())
-AND MONTH(iss.when_issued) = MONTH(CURDATE())
+AND YEAR(iss.when_issued) = 2021
+AND MONTH(iss.when_issued) = 12
 GROUP BY  job200.j_number, job200.j_orig, e4e.ee_hdrnum, e4e.ee_estnum, item.itm_code;"""
 
 
@@ -57,12 +59,17 @@ for order in orders:
             matches1 = re.finditer("\'matCode\'", dicto[0])
             matches1_start = [match.start() for match in matches1]
 
-            attributes = ("workingWidth", 'workingDepth', 'numberOutOfSheet', 'imposedWidth', 'imposedDepth')
+            attributes = ["workingWidth", 'workingDepth', 'numberOutOfSheet', 'imposedWidth', 'imposedDepth']
 
             materials = []
             for index in matches1_start:
                 materials.append(dicto[0][index:].split(":")[1].split(",")[0].replace("\'","").strip())
             subdf = subdf.loc[subdf.itm_code.isin(materials)]
+
+            materials = list(OrderedDict.fromkeys(materials))
+            cat_materials = CategoricalDtype(categories=materials, ordered=True)
+            subdf.itm_code = subdf.itm_code.astype(cat_materials)
+            subdf.sort_values(['itm_code'], inplace=True)
             materials = subdf["itm_code"]
             total = len(subdf.index) 
             for attribute in attributes:               
@@ -110,7 +117,6 @@ for order in orders:
 
 
             dfCostos = dfCostos.append(subdf, ignore_index = True)
-
 
 # %%
 dfCostoExtra = dfCostos.copy()
