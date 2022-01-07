@@ -32,7 +32,25 @@ def main():
 	GROUP BY job200.j_number, charge.cg_text
 	ORDER BY job200.j_number ASC;"""
 
+	query_str2 = """SELECT j.j_rep AS VENDEDOR, SUM(ist.ist_goods) AS 'SIN IVA', SUM(ist.ist_goods) * 0.12 AS 'IVA D'
+	FROM job200 j
+	INNER JOIN ist ON j.j_number = ist.ist_job
+	INNER JOIN inv ON ist.ist_inv_id = inv.inv_id
+	INNER JOIN charge ON ist.ist_id = charge.cg_ist_id
+	WHERE inv.inv_customer NOT IN ('EXPROREP','RECICLAJE', 'LA JOYA', 'INKTRA', 'ITERMARKE')
+	AND inv.inv_prefix <>'FSFA'
+	AND charge.cg_type IN ('GEN','PRODLITHO')
+	AND j.j_type NOT IN ('ADICIONAL')
+	AND j.j_status <> 'X'
+	AND MONTH(inv.inv_date) = MONTH(CURDATE())
+	AND YEAR(inv.inv_date) = YEAR(CURDATE())
+	GROUP BY j.j_rep
+	ORDER BY 3 DESC;
+"""
+
 	df_pendientes = pd.read_sql_query(text(query_str), con=db_connection)
+
+	df_Facturado = pd.read_sql_query(text(query_str2),con=db_connection)
 
 	json_auth_path = "C://Users//User//Documents//Analisis  Desarrollo Costos//Scripts//Python//secure_path//gcpApikey.json"
 
@@ -77,6 +95,9 @@ def main():
 
 	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].astype(str)
 
+	df_Facturado['TOTAL'] = df_Facturado['SIN IVA'] + df_Facturado['IVA D']
+	print(df_Facturado)
+
 	path = "c://Users//User//Documents//Prueba Pendientes.xlsx"
 
 	def get_col_widths(dataframe):
@@ -102,7 +123,23 @@ def main():
 
 		worksheet.add_table(1,1,max_row, max_col,{'data':df_pendientes.values.tolist(),'style':'Table Style Medium 2','columns':format_settings})
 
-		worksheet.set_column(0, max_col-1, 12)
+		worksheet.set_column(0, max_col, 12)
+
+		worksheet = workbook.add_worksheet('Facturado')
+
+		currency_format2 = workbook.add_format()
+
+		currency_format2.set_num_format('_-Q* #,##0.00_-;-Q* #,##0.00_-;_-Q* "-"??_-;_-@_-')
+		
+		(max_row2, max_col2) = df_Facturado.shape
+
+		format_settings = [{'header':column,'header_format':text_format, 'format': workbook.add_format() if column not in ['SIN IVA','IVA D','TOTAL'] else currency_format2,
+		'total_string':'Total' if column == 'VENDEDOR' else None, 'total_function': 'sum' if column != 'VENDEDOR' else None} for i,column in enumerate(df_Facturado.columns)
+		 ]
+
+		worksheet.add_table(1,1,max_row2+1, max_col2,{'data':df_Facturado.values.tolist(),'total_row':True,'style':'Table Style Medium 2','columns':format_settings})
+
+		worksheet.set_column(0, max_col2, 16)
 	
 	run_excel(path, 'Detalle',['VENDEDOR'],['Estado Pedido','CLIENTE','OP','Días desde Ingreso','Días desde Reporte'], [['SIN IVA','Total SIN IVA', 'Sum','#,##0.00_ ;-#,##0.00'],
 	['TOTAL','SUMA TOTAL', 'Sum', '#,##0.00_ ;-#,##0.00']],'Resumen','Resumen',2)
