@@ -1,14 +1,19 @@
 import time
 import win32com.client as win32
 from numpy import int64
-import numpy
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from email import encoders
 from pathlib import Path
 from pywintypes import com_error
 import sys
 from sqlalchemy import create_engine, text
 import pandas as pd
 import pygsheets as gc
-import datetime
+from datetime import datetime, date
 
 win32c = win32.constants
 def main():
@@ -79,7 +84,7 @@ def main():
 
 	df_pendientes['CANTIDAD'] = df_pendientes['CANTIDAD'].astype(int64)
 
-	current_time = datetime.datetime.now()
+	current_time = datetime.now()
 
 	df_pendientes['Días desde Ingreso'] = current_time - df_pendientes['FECHA CREACION']
 
@@ -96,14 +101,10 @@ def main():
 	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].astype(str)
 
 	df_Facturado['TOTAL'] = df_Facturado['SIN IVA'] + df_Facturado['IVA D']
-	print(df_Facturado)
+	
 
 	path = "c://Users//User//Documents//Prueba Pendientes.xlsx"
 
-	def get_col_widths(dataframe):
-		idx_max = max([len(str(s)) for s in dataframe.index.values] + [len(str(dataframe.index.name))])
-
-		return [idx_max] + [max([len(str(s)) for s in dataframe[col].values] + [len(col)]) for col in dataframe.columns]
 
 	with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
 		workbook = writer.book
@@ -148,6 +149,18 @@ def main():
 
 	run_excel(path, 'Detalle',[],['VENDEDOR','Estado Pedido'], [['SIN IVA','Total SIN IVA', 'Sum','#,##0.00_ ;-#,##0.00'],
 	['TOTAL','SUMA TOTAL', 'Sum', '#,##0.00_ ;-#,##0.00']],'Resumen_Ej','Total_por_Ejecutivo',2)
+
+
+	msg_body = """Hola, \n Adjunto reporte de facturación correspondiente a la fecha, quedo atento a cualquier comentario o duda. Saludos 
+	
+	
+	
+	
+	
+	\n -Este mensaje se envía automáticamente-"""
+
+	send_mail('costos@gmail.com','costos@mayaprin.com',f'Facturacion - {date.today().strftime("%d/%m/%Y")}',msg_body,path,'smtp.gmail.com',587,
+	'costos@mayaprin.com','Mayaprin100%')
 
 
 
@@ -218,6 +231,27 @@ def run_excel(f_path : str, sheet_name: str, pt_filters: list,pt_rows : list, pt
 
 	wb.Close(True)
 	excel.Quit()
+
+def send_mail(send_from,send_to,subject,text,files,server,port,username='',password='',isTls=True):
+    msg = MIMEMultipart()
+    msg['From'] = send_from
+    msg['To'] = send_to
+    msg['Date'] = formatdate(localtime = True)
+    msg['Subject'] = subject
+    msg.attach(MIMEText(text))
+
+    part = MIMEBase('application', "octet-stream")
+    part.set_payload(open(files, "rb").read())
+    encoders.encode_base64(part)
+    part.add_header('Content-Disposition', f'attachment; filename=Pendientes Facturacion - {date.today().strftime("%d/%m/%Y")}.xlsx')
+    msg.attach(part)
+
+    smtp = smtplib.SMTP("smtp.gmail.com", port)
+    if isTls:
+        smtp.starttls()
+    smtp.login(username,password)
+    smtp.sendmail(send_from, send_to, msg.as_string())
+    smtp.quit()
 
 
 if __name__ == '__main__':

@@ -28,8 +28,14 @@ inner join itm_cls_view item ON iss.item = item.itm_code
 INNER JOIN stkitm ON item.itm_code = stkitm.itm_code
 WHERE esttext.sect_num = 0
 AND item.itm_is_paper = 1
-AND YEAR(iss.when_issued) = 2021
-AND MONTH(iss.when_issued) = 12
+AND YEAR(iss.when_issued) = YEAR(CURDATE())
+AND MONTH(iss.when_issued) = MONTH(CURDATE())
+AND job200.j_orig in ('EURLA',
+'JSANTIZO',
+'VCAAL',
+'VORTIZ',
+'YAREVALO'
+)
 GROUP BY  job200.j_number, job200.j_orig, e4e.ee_hdrnum, e4e.ee_estnum, item.itm_code;"""
 
 
