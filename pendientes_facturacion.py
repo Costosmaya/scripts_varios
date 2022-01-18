@@ -138,7 +138,7 @@ def main():
 		'total_string':'Total' if column == 'VENDEDOR' else None, 'total_function': 'sum' if column != 'VENDEDOR' else None} for i,column in enumerate(df_Facturado.columns)
 		 ]
 
-		worksheet.add_table(1,1,max_row2+1, max_col2,{'data':df_Facturado.values.tolist(),'total_row':True,'style':'Table Style Medium 2','columns':format_settings})
+		worksheet.add_table(1,1,max_row2+2, max_col2,{'data':df_Facturado.values.tolist(),'total_row':True,'style':'Table Style Medium 2','columns':format_settings})
 
 		worksheet.set_column(0, max_col2, 16)
 	
