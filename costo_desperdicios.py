@@ -31,7 +31,6 @@ AND item.itm_is_paper = 1
 AND YEAR(iss.when_issued) = YEAR(CURDATE())
 AND MONTH(iss.when_issued) = MONTH(CURDATE())
 AND job200.j_orig in ('EURLA',
-'JSANTIZO',
 'VCAAL',
 'VORTIZ',
 'YAREVALO'

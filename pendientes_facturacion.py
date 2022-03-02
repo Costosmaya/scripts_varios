@@ -93,14 +93,18 @@ def main():
 	df_pendientes['Días desde Ingreso'] = df_pendientes['Días desde Ingreso'].astype('timedelta64[D]').fillna('')
 
 	df_pendientes['Días desde Reporte'] = df_pendientes['Días desde Reporte'].astype('timedelta64[D]').fillna('')
-
-	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].astype(str)
-
+	
 	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].apply(lambda x: '' if x == 'NaT' else x)
 
-	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].astype(str)
+	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].dt.strftime('%d/%m/%y').fillna('')
+
+	
+
+	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].dt.strftime('%d/%m/%y')
 
 	df_Facturado['TOTAL'] = df_Facturado['SIN IVA'] + df_Facturado['IVA D']
+
+	print(df_pendientes)
 	
 
 	path = "c://Users//User//Documents//Prueba Pendientes.xlsx"
@@ -113,6 +117,7 @@ def main():
 		currency_format = workbook.add_format()
 		currency_format.set_num_format('#,##0.00_ ;-#,##0.00')
 
+
 		text_format = workbook.add_format()
 		text_format.set_text_wrap()
 
@@ -120,7 +125,7 @@ def main():
 
 		
 
-		format_settings = [{'header':column,'header_format':text_format, 'format': workbook.add_format() if column not in ['SIN IVA','TOTAL','Días desde Ingreso','Días desde Reporte'] else currency_format} for i,column in enumerate(df_pendientes.columns)]
+		format_settings = [{'header':column,'header_format':text_format, 'format':currency_format if column in ['SIN IVA','TOTAL','Días desde Ingreso','Días desde Reporte'] else  workbook.add_format()} for i,column in enumerate(df_pendientes.columns)]
 
 		worksheet.add_table(1,1,max_row, max_col,{'data':df_pendientes.values.tolist(),'style':'Table Style Medium 2','columns':format_settings})
 
