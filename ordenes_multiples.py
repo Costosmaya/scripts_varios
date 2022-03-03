@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, text
 import pygsheets as gc
 import re
 import os
+from sqlalchemy.sql.expression import desc
 
 from uritemplate.api import expand
 
@@ -27,7 +28,6 @@ def main():
     
     query['matches'] = query.apply(find_values, axis=1)
 
-    print(query)
 
     query= query[['j_number','Titulo','No. Motivos','matches']]
 
@@ -49,9 +49,22 @@ def main():
 
     df_desglose.drop(columns=['Titulo','Motivo'], inplace=True)
 
-    df_desglose.to_csv(os.getcwd() +'/orders.csv')
+    json_auth_path = "C://Users//User//Documents//Analisis  Desarrollo Costos//Scripts//Python//secure_path//gcpApikey.json"
     
+    gcon = gc.authorize(service_file = json_auth_path)
+
+    wsheet = gcon.open_by_url('https://docs.google.com/spreadsheets/d/1YN6FiDWjmd1Rbsp3qzPkkCyX1br7DrsIRRpBOPejsaw/edit#gid=1139174598')
+
+    sheet = wsheet.worksheet_by_title('Montajes Múltiples')
+
+    df_gsheets = sheet.get_as_df().dropna()
+
+    df_desglose = df_desglose[~df_desglose['j_number'].isin(df_gsheets['OP'])]
     
+    if (df_desglose.shape[0] > 0):
+        max_rows = df_gsheets.shape[0]
+        max_rows+=2
+        sheet.set_dataframe(df_desglose,start=(max_rows,1), copy_head = False)
 
 
     
