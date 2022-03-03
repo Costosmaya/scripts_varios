@@ -14,8 +14,8 @@ def main():
 
     sheet = wsheet.worksheet_by_title('NCI-Consumos')
 
-    query_str = """SELECT j.j_number AS OP, itm.code AS Codigo,CONCAT(itm.name,CONCAT(IFNULL(itm.itm_name_2,''),IFNULL( itm.itm_name_3,''))) AS Descripcion,
-    SUM(iss.iss_value) AS Valor, SUM(iss.iss_quantity) AS Cantidad,
+    query_str = """SELECT j.j_number AS OP, wo200.wo_number as OT, itm.code AS Codigo,CONCAT(itm.name,CONCAT(IFNULL(itm.itm_name_2,''),IFNULL( itm.itm_name_3,''))) AS Descripcion,
+     SUM(iss.iss_quantity) AS Cantidad,SUM(iss.iss_value) AS Valor,
     CASE
         WHEN itm.class_code = 'PAPELHOJA' then 'papel'
         WHEN itm.class_code = 'PLACAS'
@@ -51,9 +51,10 @@ def main():
     INNER JOIN wo_task200 tsk ON wo200.wo_number = tsk.tk_wonum
     INNER JOIN iss ON tsk.tk_id = iss.iss_task_id
     INNER JOIN itm ON iss.item = itm.code
-    WHERE (iss.note LIKE '%Reimp%' OR iss.note LIKE '%REIMP%' OR iss.note LIKE '%reimp%')
+    WHERE iss.id NOT IN  (SELECT iss.id FROM iss INNER JOIN itm ON iss.item = itm.code WHERE itm.class_code <> 'PAPELHOJA'
+	 AND (iss.note LIKE '%Reimp%' OR iss.note LIKE '%REIMP%' OR iss.note LIKE '%reimp%') AND iss.when_issued BETWEEN '2021-12-01' AND CURDATE())
     AND iss.when_issued BETWEEN '2021-12-01' AND CURDATE()
-    GROUP BY j.j_number, itm.code, iss.req_id"""
+    GROUP BY j.j_number,wo200.wo_number, itm.code, iss.id"""
 
     db_connection = create_engine(connection_str)
 
