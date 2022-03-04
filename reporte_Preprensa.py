@@ -12,7 +12,7 @@ def main():
     query_str = """SELECT tm_start AS Fecha,tm_op_code AS Operario, TIMEDIFF(tm_end,tm_start) AS Duracion, tm_non_prod AS Actividad, IFNULL(tm_note,'') AS nota
     FROM tm
     WHERE tm.tm_non_prod LIKE 'ARR%'
-    AND MONTH(tm_start) = 1
+    AND MONTH(tm_start) = MONTH(CURDATE()) -1
     AND YEAR(tm_start) = YEAR(CURDATE())"""
 
     df_marcajes = pd.read_sql_query(text(query_str), con= db_connection)
@@ -58,7 +58,7 @@ def main():
     df_marcajes_diario = df_marcajes_diario.round({'Costo':2})
 
 
-
+    #Código formato de escritura en excel
     with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
 
         workbook = writer.book

@@ -46,12 +46,14 @@ query
 # %%
 
 
-
+#columnas a utilizar para cálculos
 columns_finishedDf = ["j_number","j_orig","ee_hdrnum","ee_estnum","itm_code","Ancho","Alto","iss_value","iss_quantity","workingWidth", "workingDepth","numberOutOfSheet"
 ,"imposedWidth","imposedDepth",	"Area Almacen","costo Unitario","Costoxinch2", "Area Prensa", "Area Imposicion", "Area desperdiciada", "% Area desperdiciada", "Costo Desperdicio"]
 
 dfCostos = pd.DataFrame(columns=columns_finishedDf)
 orders = list(dict.fromkeys(query["j_number"].tolist()))
+
+#Se cicla por order, cabecera y presupuesto para obtener los datos agrupados por estos campos y tener datos a diferentes niveles
 for order in orders:  
     subdf1 = query.loc[query.j_number == order]
     headers = list(dict.fromkeys(subdf1["ee_hdrnum"].tolist()))
@@ -61,23 +63,27 @@ for order in orders:
         for estimate in estimates:            
             subdf = subdf2.loc[subdf2.ee_estnum == estimate]
             dicto = subdf["sect_text"].tolist()
-            matches1 = re.finditer("\'matCode\'", dicto[0])
+            matches1 = re.finditer("\'matCode\'", dicto[0]) #Se busca dentro de los textos del presupuesto, el codigo de material utilizado
             matches1_start = [match.start() for match in matches1]
 
+            #atributos del papel en los textos en orden: ancho impresión, largo impresión, cantidad de pliegos por pliego prensa, ancho imposición, largo imposición
             attributes = ["workingWidth", 'workingDepth', 'numberOutOfSheet', 'imposedWidth', 'imposedDepth']
 
             materials = []
             for index in matches1_start:
-                materials.append(dicto[0][index:].split(":")[1].split(",")[0].replace("\'","").strip())
-            subdf = subdf.loc[subdf.itm_code.isin(materials)]
+                materials.append(dicto[0][index:].split(":")[1].split(",")[0].replace("\'","").strip()) #Se transforma el texto para separar el codigo del material
+            subdf = subdf.loc[subdf.itm_code.isin(materials)] #se filtran los materiales que se encuentran dentro de los consumos relacionados al pedido del presupuesto
 
             materials = list(OrderedDict.fromkeys(materials))
+            #se convierte el material en categoría para poder ordenarlos
+            #De esta forma se garantiza que cada consumo está ordenado con el material que es
             cat_materials = CategoricalDtype(categories=materials, ordered=True)
             subdf.itm_code = subdf.itm_code.astype(cat_materials)
             subdf.sort_values(['itm_code'], inplace=True)
             materials = subdf["itm_code"]
-            total = len(subdf.index) 
-            for attribute in attributes:               
+            total = len(subdf.index)
+            #Se cicla cada atributo del material para separarlo en el texto y transformarlo
+            for attribute in attributes:              
                 values = []                
                 matches = re.finditer(attribute, dicto[0])
                 matches_start = [match.start() for match in matches]            
@@ -85,6 +91,8 @@ for order in orders:
                     index = matches_start[x]
                     str_ = dicto[0][index:].split(":")[1].split(",")[0].replace("\'","").strip()
                     value = int(re.search(r'\d+', str_).group())
+                    #Se revisa si el valor es menor a 25 y no es el númmero de pliegos, pues al estar las medidas en milímetros
+                    #Es improvable que exista una medida de 25 milímetros
                     if(value == 0 or (value< 25 and attribute != "numberOutOfSheet")):
                         continue
                     else:
