@@ -24,12 +24,13 @@ def main():
     def find_values(value):
         motivos = int(value['No. Motivos'])
         matches = value['j_tech_spec'].strip().split('\n')[-motivos:]
-        return ';'.join([string.strip() for  string in matches])
+        return '~'.join([string.strip() for  string in matches])
     
     query['matches'] = query.apply(find_values, axis=1)
 
 
     query= query[['j_number','Titulo','No. Motivos','matches']]
+    query['No. Motivos'] = query['No. Motivos'].astype(int)
 
     max_motivos = int(query['No. Motivos'].max())+1
 
@@ -37,7 +38,7 @@ def main():
 
     df_motivos = query.copy()[['j_number','matches']]
 
-    df_motivos[columns] = df_motivos['matches'].str.split(';', expand=True)
+    df_motivos[columns] = df_motivos['matches'].str.split('~', expand=True)
 
     df_motivos = df_motivos.melt(id_vars='j_number', value_vars=columns, var_name='No. Motivo',value_name='Motivo')
 
@@ -48,8 +49,6 @@ def main():
     df_desglose['Titulo Motivo'] = df_desglose['Titulo'] + ' ' + df_desglose['Motivo']
 
     df_desglose.drop(columns=['Titulo','Motivo'], inplace=True)
-
-    json_auth_path = "C://Users//User//Documents//Analisis  Desarrollo Costos//Scripts//Python//secure_path//gcpApikey.json"
     
     gcon = gc.authorize(service_file = json_auth_path)
 

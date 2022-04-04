@@ -24,9 +24,9 @@ def main():
         WHEN itm.class_code = 'FOIL' then 'estampado'
         WHEN itm.class_code = 'TROQUEL' then 'troquelado'
         WHEN itm.name LIKE 'PEGAMENTO%' then 'pegado'
-        WHEN itm.sl_analysis <> 'EMPAQUE' then 'armado'
+        WHEN itm.sl_analysis <> 'EMPAQUES' then 'revisado'
         ELSE
-        'fin'
+        'empaque'
     END AS Proceso,
     CASE
         WHEN itm.class_code = 'PAPELHOJA' then 0
@@ -39,17 +39,20 @@ def main():
         WHEN itm.class_code = 'FOIL' then 3
         WHEN itm.class_code = 'TROQUEL' then 4
         WHEN itm.name LIKE 'PEGAMENTO%' then 5
-        WHEN itm.sl_analysis <> 'EMPAQUE' then 5
+        WHEN itm.sl_analysis <> 'EMPAQUES' then 6
         ELSE
-        6
+        7
     END AS num_proceso
         FROM job200
         INNER JOIN wo200 ON job200.j_number = wo200.wo_job
         INNER JOIN wo_task200 ON wo200.wo_number = wo_task200.tk_wonum
         INNER JOIN req ON wo_task200.tk_id = req.req_task_id
         INNER JOIN itm ON req.item = itm.code
-        WHERE job200.j_number BETWEEN (SELECT ((MAX(job200.j_number) DIV 1000 ) * 1000) - 3000 FROM job200) AND (SELECT MAX(job200.j_number) FROM job200)
+        WHERE job200.j_booked_in BETWEEN '2021-12-01' AND CURDATE()
         AND job200.j_status <> 'X'
+        AND itm.code NOT LIKE 'K-%'
+        AND itm.code NOT LIKE 'C-PRUEBA%'
+        AND itm.code NOT IN ('VA-FABR-TROQUEL','X-FAB-CLICHE ESTAMPA')
         GROUP BY job200.j_number, wo200.wo_number, req.item, itm.name
     """
     db_connection = create_engine(connection_str)

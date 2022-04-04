@@ -31,8 +31,7 @@ def main():
         INNER JOIN res ON wo_trans200.wt_resource = res.res_code
         INNER JOIN cc ON res.res_cc = cc.cc_code
         WHERE job200.j_type = 'CAJA'
-        AND MONTH(wo_trans200.wt_started)  >= (MONTH(CURDATE())-1)
-        AND YEAR(wo_trans200.wt_started) = YEAR(CURDATE())
+        AND YEAR(wo_trans200.wt_started) >= YEAR(CURDATE())
         AND wo_trans200.wt_source = 'TS'
         AND wo_trans200.wt_resource LIKE 'PEG CAJ%'
         AND act.act_analysis = 'TIR'
@@ -42,9 +41,6 @@ def main():
     query = pd.read_sql_query(text(query_str), con = db_connection)
 
     df_agrupado = query.groupby(['Mes','Tipo']).sum().reset_index()
-
-    
-    print(df_agrupado)
 
     json_auth_path = "C://Users//User//Documents//Analisis  Desarrollo Costos//Scripts//Python//secure_path//gcpApikey.json"
     

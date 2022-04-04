@@ -16,7 +16,7 @@ def main():
 
     query_str = """SELECT j.j_number AS OP, wo200.wo_number as OT, itm.code AS Codigo,CONCAT(itm.name,CONCAT(IFNULL(itm.itm_name_2,''),IFNULL( itm.itm_name_3,''))) AS Descripcion,
      SUM(iss.iss_quantity) AS Cantidad,SUM(iss.iss_value) AS Valor,
-    CASE
+CASE
         WHEN itm.class_code = 'PAPELHOJA' then 'papel'
         WHEN itm.class_code = 'PLACAS'
         OR (itm.class_code = 'TINTA' AND itm.sl_analysis <> 'BARNICES')
@@ -27,9 +27,9 @@ def main():
         WHEN itm.class_code = 'FOIL' then 'estampado'
         WHEN itm.class_code = 'TROQUEL' then 'troquelado'
         WHEN itm.name LIKE 'PEGAMENTO%' then 'pegado'
-        WHEN itm.sl_analysis <> 'EMPAQUE' then 'armado'
+        WHEN itm.sl_analysis <> 'EMPAQUES' then 'revisado'
         ELSE
-        'fin'
+        'empaque'
     END AS Proceso,
     CASE
         WHEN itm.class_code = 'PAPELHOJA' then 0
@@ -42,9 +42,9 @@ def main():
         WHEN itm.class_code = 'FOIL' then 3
         WHEN itm.class_code = 'TROQUEL' then 4
         WHEN itm.name LIKE 'PEGAMENTO%' then 5
-        WHEN itm.sl_analysis <> 'EMPAQUE' then 5
+        WHEN itm.sl_analysis <> 'EMPAQUES' then 6
         ELSE
-        6
+        7
     END AS num_proceso
     FROM job200 j
     INNER JOIN wo200 ON j.j_number = wo200.wo_job
@@ -54,6 +54,9 @@ def main():
     WHERE iss.id NOT IN  (SELECT iss.id FROM iss INNER JOIN itm ON iss.item = itm.code WHERE itm.class_code <> 'PAPELHOJA'
 	 AND (iss.note LIKE '%Reimp%' OR iss.note LIKE '%REIMP%' OR iss.note LIKE '%reimp%') AND iss.when_issued BETWEEN '2021-12-01' AND CURDATE())
     AND iss.when_issued BETWEEN '2021-12-01' AND CURDATE()
+    AND itm.code NOT LIKE 'K-%'
+    AND itm.code NOT LIKE 'C-PRUEBA%'
+    AND itm.code NOT IN ('VA-FABR-TROQUEL','X-FAB-CLICHE ESTAMPA')
     GROUP BY j.j_number,wo200.wo_number, itm.code, iss.id"""
 
     db_connection = create_engine(connection_str)
