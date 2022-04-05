@@ -20,7 +20,7 @@ res,messages = imap.select('"Env&AO0-os Power BI/Producci&APM-n"')
 
 messages = int(messages[0])
 
-n = 26
+n = 36
 counter = 0
 for i in range(messages,0, -1):
     if counter < n:
@@ -48,4 +48,4 @@ for item in list_dir:
     text = pytesseract.image_to_string(img)
     if '(En bla' in text:
         blank_contador+=1
-print(blank_contador)
+print(blank_contador/(n-1))
