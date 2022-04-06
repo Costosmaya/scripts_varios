@@ -31,14 +31,14 @@ for i in range(messages,0, -1):
                 for attachment in msg.iter_attachments():
                     if 'image/png' in attachment.get_content_type():
                         img = Image.open(BytesIO(attachment.get_content()))
-                        img.save(f'imgs_qa/{i}.png','PNG')
+                        img.save(f'C:/Users/User/Documents/Analisis  Desarrollo Costos/Scripts/Python/imgs_qa/{i}.png','PNG')
                         counter+=1
         
     else:
         break;
                    
 
-path = f'{os.getcwd()}\imgs_qa'
+path = 'C:\\Users\\User\\Documents\\Analisis  Desarrollo Costos\\Scripts\\Python\\imgs_qa'
 
 list_dir = os.scandir(path)
 blank_contador = 0
@@ -48,4 +48,4 @@ for item in list_dir:
     text = pytesseract.image_to_string(img)
     if '(En bla' in text:
         blank_contador+=1
-print(blank_contador/(n-1))
+print(f'Cantidad Reportes en Blanco:{blank_contador}, ratio:{round(blank_contador/(n-1),2)}')
