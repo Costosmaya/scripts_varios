@@ -93,21 +93,17 @@ def main():
 	df_pendientes['Días desde Ingreso'] = df_pendientes['Días desde Ingreso'].astype('timedelta64[D]').fillna('')
 
 	df_pendientes['Días desde Reporte'] = df_pendientes['Días desde Reporte'].astype('timedelta64[D]').fillna('')
-	
-	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].apply(lambda x: '' if x == 'NaT' else x)
 
 	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].dt.strftime('%d/%m/%y').fillna('')
 
-	
+	df_pendientes['FECHA REPORTE'] = df_pendientes['FECHA REPORTE'].apply(lambda x: '' if x == 'NaT' else x)
 
-	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].dt.strftime('%d/%m/%y')
+	df_pendientes['FECHA CREACION'] = df_pendientes['FECHA CREACION'].dt.strftime('%d/%m/%y').fillna('')
 
 	df_Facturado['TOTAL'] = df_Facturado['SIN IVA'] + df_Facturado['IVA D']
-
-	print(df_pendientes)
 	
 
-	path = "c://Users//User//Documents//Prueba Pendientes.xlsx"
+	path = "G://Mi unidad//ArchivosServidorMayaprin//Facturacion Reporte.xlsx"
 
 
 	with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
@@ -117,7 +113,6 @@ def main():
 		currency_format = workbook.add_format()
 		currency_format.set_num_format('#,##0.00_ ;-#,##0.00')
 
-
 		text_format = workbook.add_format()
 		text_format.set_text_wrap()
 
@@ -125,7 +120,7 @@ def main():
 
 		
 
-		format_settings = [{'header':column,'header_format':text_format, 'format':currency_format if column in ['SIN IVA','TOTAL','Días desde Ingreso','Días desde Reporte'] else  workbook.add_format()} for i,column in enumerate(df_pendientes.columns)]
+		format_settings = [{'header':column,'header_format':text_format, 'format': workbook.add_format() if column not in ['SIN IVA','TOTAL','Días desde Ingreso','Días desde Reporte'] else currency_format} for i,column in enumerate(df_pendientes.columns)]
 
 		worksheet.add_table(1,1,max_row, max_col,{'data':df_pendientes.values.tolist(),'style':'Table Style Medium 2','columns':format_settings})
 
@@ -156,7 +151,7 @@ def main():
 	['TOTAL','SUMA TOTAL', 'Sum', '#,##0.00_ ;-#,##0.00']],'Resumen_Ej','Total_por_Ejecutivo',2)
 
 
-	msg_body = """Hola, \n Adjunto reporte de facturación correspondiente a la fecha, quedo atento a cualquier comentario o duda. Saludos 
+	msg_body = """Buenas tardes, \n Adjunto reporte de facturación y pendientes de facturación correspondiente a la fecha, quedo atento a cualquier comentario o duda. Saludos 
 	
 	
 	
@@ -164,8 +159,8 @@ def main():
 	
 	\n -Este mensaje se envía automáticamente-"""
 
-	send_mail('costos@gmail.com','costos@mayaprin.com',f'Facturacion - {date.today().strftime("%d/%m/%Y")}',msg_body,path,'smtp.gmail.com',587,
-	'costos@mayaprin.com','Mayaprin100%')
+	send_mail('costos@gmail.com',[ 'angeldiegor@mayaprin.com', 'mcruz@mayaprin.com','gzuniga@mayaprin.com', 'kderios@mayaprin.com', 'vortiz@mayaprin.com']
+           ,f'Pendientes de Facturación - {date.today().strftime("%d/%m/%Y")}',msg_body,path,'smtp.gmail.com',587,'costos@mayaprin.com','Mayaprin100%')
 
 
 
@@ -240,7 +235,7 @@ def run_excel(f_path : str, sheet_name: str, pt_filters: list,pt_rows : list, pt
 def send_mail(send_from,send_to,subject,text,files,server,port,username='',password='',isTls=True):
     msg = MIMEMultipart()
     msg['From'] = send_from
-    msg['To'] = send_to
+    msg['To'] = ', '.join(send_to)
     msg['Date'] = formatdate(localtime = True)
     msg['Subject'] = subject
     msg.attach(MIMEText(text))
